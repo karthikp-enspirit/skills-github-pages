@@ -1,0 +1,876 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Trip Bookings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#3B82F6',
+secondary: '#64748B'
+},
+borderRadius: {
+'none': '0px',
+'sm': '4px',
+DEFAULT: '8px',
+'md': '12px',
+'lg': '16px',
+'xl': '20px',
+'2xl': '24px',
+'3xl': '32px',
+'full': '9999px',
+'button': '8px'
+}
+}
+}
+}
+</script>
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+/* Modal styles removed as modal is replaced by sub page */
+.chat-popover {
+transform: scale(0);
+transition: transform 0.2s ease-out;
+transform-origin: bottom right;
+}
+.chat-popover.show {
+transform: scale(1);
+}
+#chatMessages {
+scrollbar-width: thin;
+scrollbar-color: rgba(203, 213, 225, 1) rgba(241, 245, 249, 1);
+}
+#chatMessages::-webkit-scrollbar {
+width: 6px;
+}
+#chatMessages::-webkit-scrollbar-track {
+background: rgba(241, 245, 249, 1);
+}
+#chatMessages::-webkit-scrollbar-thumb {
+background-color: rgba(203, 213, 225, 1);
+border-radius: 20px;
+}
+</style>
+</head>
+<body class="bg-gray-50">
+<div class="flex min-h-screen">
+<aside class="w-64 bg-white border-r border-gray-200">
+<div class="p-4">
+<img src="https://static.readdy.ai/image/a007d4763439bf6e95fde8fcb906c41c/0e4fcee915210f0957697e156affd25e.png" alt="emPath logo" class="h-10">
+</div>
+<nav class="mt-4">
+<a href="#" class="flex items-center px-4 py-3 bg-gray-50 text-primary">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-plane-line"></i>
+</div>
+<span class="ml-3">Trip Bookings</span>
+</a>
+<a href="#" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-calendar-line"></i>
+</div>
+<span class="ml-3">Meetings</span>
+</a>
+<a href="https://readdy.ai/home/cebd9b50-d804-443f-8e18-41920a3974d1/e2be5316-9cca-4123-9c0e-bee75a861e8c" data-readdy="true" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-message-3-line"></i>
+</div>
+<span class="ml-3">Messages</span>
+</a>
+</nav>
+</aside>
+<main class="flex-1">
+<header class="bg-white border-b border-gray-200 px-8 py-4">
+<div class="flex items-center justify-between">
+<h2 class="text-xl font-semibold">Trip Bookings</h2>
+<div class="flex items-center gap-4">
+<div class="relative">
+<input type="text" placeholder="Search bookings..." class="pl-10 pr-4 py-2 border border-gray-200 rounded-button w-64 focus:outline-none focus:border-primary">
+<div class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center text-gray-400">
+<i class="ri-search-line"></i>
+</div>
+</div>
+<div class="flex items-center gap-3">
+<div class="flex flex-col items-end">
+<span class="text-sm font-medium">Sarah Johnson</span>
+<span class="text-xs text-gray-500">Travel Agent</span>
+</div>
+<div class="w-10 h-10 bg-primary text-white rounded-full flex items-center justify-center font-medium">
+SJ
+</div>
+</div>
+</div>
+</div>
+<div class="flex gap-6 mt-6">
+<button id="allBookingsBtn" class="text-primary border-b-2 border-primary px-1 py-2">All Bookings (<span id="allBookingsCount">10</span>)</button>
+<button id="issuedTicketsBtn" class="text-gray-600 px-1 py-2">Tickets Issued (<span id="issuedTicketsCount">6</span>)</button>
+<button id="pendingTicketsBtn" class="text-gray-600 px-1 py-2">Pending Tickets (<span id="pendingTicketsCount">4</span>)</button>
+</div>
+</header>
+<div class="p-8">
+<div class="bg-white rounded-lg shadow">
+<table class="w-full">
+<thead>
+<tr class="border-b border-gray-200">
+<th class="text-left px-6 py-4 text-sm font-medium text-gray-500">STATUS</th>
+<th class="text-left px-6 py-4 text-sm font-medium text-gray-500">TRIP DATES</th>
+<th class="text-left px-6 py-4 text-sm font-medium text-gray-500">ROUTE</th>
+<th class="text-left px-6 py-4 text-sm font-medium text-gray-500">PNR</th>
+<th class="text-left px-6 py-4 text-sm font-medium text-gray-500">AIRLINE CONFIRMATION</th>
+<th class="text-left px-6 py-4 text-sm font-medium text-gray-500">ACTIONS</th>
+</tr>
+</thead>
+<tbody id="bookingsList">
+</tbody>
+</table>
+<div class="px-6 py-4 border-t border-gray-200">
+<div class="flex items-center justify-between">
+<span class="text-sm text-gray-600">Showing 1 to 10 of 12 entries</span>
+<div class="flex items-center gap-2">
+<button class="px-3 py-1 border border-gray-200 rounded text-gray-600 hover:bg-gray-50">Previous</button>
+<button class="px-3 py-1 bg-primary text-white rounded">1</button>
+<button class="px-3 py-1 border border-gray-200 rounded text-gray-600 hover:bg-gray-50">2</button>
+<button class="px-3 py-1 border border-gray-200 rounded text-gray-600 hover:bg-gray-50">3</button>
+<button class="px-3 py-1 border border-gray-200 rounded text-gray-600 hover:bg-gray-50">Next</button>
+</div>
+</div>
+</div>
+</div>
+</div>
+</main>
+<!-- Modal removed as it's replaced by the sub page approach -->
+<div class="chat-popover fixed bottom-4 right-4 w-96 h-[32rem] bg-white rounded-lg shadow-lg z-60">
+<div class="p-4 border-b border-gray-200">
+<div class="flex items-center justify-between">
+<div>
+<h4 class="font-medium">Chat with Traveler</h4>
+<p class="text-sm text-gray-500">PNR: <span id="chatPnr"></span></p>
+</div>
+<button class="close-chat text-gray-400 hover:text-gray-600">
+<i class="ri-close-line text-xl"></i>
+</button>
+</div>
+</div>
+<div class="h-[calc(100%-8rem)] overflow-y-auto p-4" id="chatMessages"></div>
+<div class="p-4 border-t border-gray-200">
+<div class="flex flex-col gap-2">
+<div class="flex gap-2">
+<input type="text" id="messageInput" placeholder="Type a message..." class="flex-1 px-4 py-2 border border-gray-200 rounded-button focus:outline-none focus:border-primary">
+<button id="sendMessage" class="bg-primary text-white px-4 py-2 rounded-button flex items-center gap-2 whitespace-nowrap">
+<i class="ri-send-plane-line"></i>
+</button>
+</div>
+<div class="flex items-center gap-2">
+<button class="text-gray-500 hover:text-primary" id="attachFile">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-attachment-2-line"></i>
+</div>
+</button>
+<button class="text-gray-500 hover:text-primary" id="addEmoji">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-emotion-line"></i>
+</div>
+</button>
+<input type="file" id="fileInput" class="hidden">
+</div>
+</div>
+</div>
+</div>
+</div>
+<script>
+const bookings = [
+{
+status: 'Pending',
+dates: 'Mar 30 - Apr 5, 2025',
+route: 'JFK - LHR',
+pnr: 'ABC123',
+confirmation: '-',
+hasChat: false,
+traveler: 'Emily Johnson',
+airline: {
+code: 'BA',
+name: 'British Airways',
+flightNumber: 'BA178'
+},
+meeting: {
+eventName: 'Annual Tech Conference 2025',
+eventLocation: 'London ExCeL Center',
+eventDates: 'Apr 2-4, 2025',
+eventTime: '9:00 AM - 5:00 PM',
+hostName: 'Alexander Thompson',
+hostEmail: 'a.thompson@techconference.com',
+locationImage: 'https://public.readdy.ai/ai/img_res/39eaa393b5ee041bc0428945de63a025.jpg'
+}
+},
+{
+status: 'Pending',
+dates: 'May 5 - May 12, 2025',
+route: 'LAX - CDG',
+pnr: 'DEF456',
+confirmation: '-',
+hasChat: false,
+traveler: 'Michael Chen',
+airline: {
+code: 'AF',
+name: 'Air France',
+flightNumber: 'AF065'
+},
+meeting: {
+eventName: 'International Design Summit',
+eventLocation: 'Palais des Congrès de Paris',
+eventDates: 'May 7-9, 2025',
+eventTime: '10:00 AM - 6:00 PM',
+hostName: 'Sophie Dubois',
+hostEmail: 's.dubois@designsummit.com',
+locationImage: 'https://public.readdy.ai/ai/img_res/546dbdf689df77f02f6d137e24f6c199.jpg'
+}
+},
+{
+status: 'Pending',
+dates: 'Jun 2 - Jun 9, 2025',
+route: 'LAX - SYD',
+pnr: 'JKL012',
+confirmation: '-',
+hasChat: true,
+traveler: 'Sophia Rodriguez',
+airline: {
+code: 'QF',
+name: 'Qantas',
+flightNumber: 'QF012'
+},
+meeting: {
+eventName: 'Annual Tech Conference 2025',
+eventLocation: 'Sydney Convention Center',
+eventDates: 'Jun 3-8, 2025',
+eventTime: '9:00 AM - 6:00 PM',
+hostName: 'Alexandra Mitchell',
+hostEmail: 'a.mitchell@techconference.com',
+locationImage: 'https://readdy.ai/api/search-image?query=modern convention center in Sydney with harbor view, sleek architecture, glass facade, business conference venue, professional setting, bright daylight, clear blue sky&width=800&height=400&seq=1234&orientation=landscape'
+}
+},
+{
+status: 'Pending',
+dates: 'Jul 1 - Jul 8, 2025',
+route: 'HKG - SIN',
+pnr: 'PQR678',
+confirmation: '-',
+hasChat: true,
+traveler: 'Daniel Kim',
+airline: {
+code: 'CX',
+name: 'Cathay Pacific',
+flightNumber: 'CX759'
+},
+meeting: {
+eventName: 'Asia Pacific Finance Forum',
+eventLocation: 'Marina Bay Sands Convention Center',
+eventDates: 'Jul 3-5, 2025',
+eventTime: '8:30 AM - 5:30 PM',
+hostName: 'Richard Wong',
+hostEmail: 'r.wong@apfinanceforum.com',
+locationImage: 'https://public.readdy.ai/ai/img_res/c52181d37b37abc10d34d43317279d97.jpg'
+}
+},
+{
+status: 'Issued',
+dates: 'Apr 15 - Apr 20, 2025',
+route: 'LHR - JFK',
+pnr: 'XYZ789',
+confirmation: 'AA12345',
+hasChat: false,
+traveler: 'Olivia Williams',
+airline: {
+code: 'AA',
+name: 'American Airlines',
+flightNumber: 'AA12345'
+},
+meeting: {
+eventName: 'Global Marketing Summit',
+eventLocation: 'Javits Center New York',
+eventDates: 'Apr 16-18, 2025',
+eventTime: '9:00 AM - 5:00 PM',
+hostName: 'Jonathan Parker',
+hostEmail: 'j.parker@marketingsummit.com',
+locationImage: 'https://public.readdy.ai/ai/img_res/80c24e64a26ab10ee88ab18c8b3156a6.jpg'
+}
+},
+{
+status: 'Issued',
+dates: 'May 18 - May 25, 2025',
+route: 'SFO - HND',
+pnr: 'GHI789',
+confirmation: 'JL67890',
+hasChat: true,
+traveler: 'James Wilson',
+airline: {
+code: 'JL',
+name: 'Japan Airlines',
+flightNumber: 'JL67890'
+}
+},
+{
+status: 'Issued',
+dates: 'Jun 15 - Jun 22, 2025',
+route: 'LHR - TXL',
+pnr: 'MNO345',
+confirmation: 'LH54321',
+hasChat: false,
+traveler: 'Ava Martinez',
+airline: {
+code: 'LH',
+name: 'Lufthansa',
+flightNumber: 'LH54321'
+}
+},
+{
+status: 'Issued',
+dates: 'Jul 15 - Jul 22, 2025',
+route: 'LHR - DXB',
+pnr: 'STU901',
+confirmation: 'EK67890',
+hasChat: false,
+traveler: 'Noah Thompson',
+airline: {
+code: 'EK',
+name: 'Emirates',
+flightNumber: 'EK67890'
+}
+},
+{
+status: 'Issued',
+dates: 'Aug 18 - Aug 25, 2025',
+route: 'JFK - YYZ',
+pnr: 'YZA567',
+confirmation: 'AC54321',
+hasChat: true,
+traveler: 'Isabella Garcia',
+airline: {
+code: 'AC',
+name: 'Air Canada',
+flightNumber: 'AC54321'
+}
+},
+{
+status: 'Issued',
+dates: 'Sep 15 - Sep 22, 2025',
+route: 'LHR - CPT',
+pnr: 'EFG123',
+confirmation: 'SA67890',
+hasChat: false,
+traveler: 'Ethan Brown',
+airline: {
+code: 'SA',
+name: 'South African Airways',
+flightNumber: 'SA67890'
+}
+}
+];
+const airports = {
+'JFK': 'John F Kennedy International Airport',
+'LHR': 'London Heathrow Airport',
+'LAX': 'Los Angeles International Airport',
+'CDG': 'Charles de Gaulle Airport',
+'SYD': 'Sydney Airport',
+'HKG': 'Hong Kong International Airport',
+'SIN': 'Singapore Changi Airport',
+'HND': 'Tokyo Haneda Airport',
+'SFO': 'San Francisco International Airport',
+'TXL': 'Berlin Tegel Airport',
+'DXB': 'Dubai International Airport',
+'YYZ': 'Toronto Pearson International Airport',
+'CPT': 'Cape Town International Airport'
+};
+function renderBookings(filter = 'all') {
+const tbody = document.getElementById('bookingsList');
+const filteredBookings = filter === 'all'
+? bookings
+: filter === 'issued'
+? bookings.filter(booking => booking.status === 'Issued')
+: bookings.filter(booking => booking.status === 'Pending');
+tbody.innerHTML = filteredBookings.map(booking => `
+<tr class="border-b border-gray-200 hover:bg-gray-50">
+<td class="px-6 py-4">
+<span class="px-2 py-1 text-sm rounded-full ${booking.status === 'Pending' ? 'bg-yellow-100 text-yellow-800' : 'bg-green-100 text-green-800'}">
+${booking.status}
+</span>
+</td>
+<td class="px-6 py-4 text-gray-900">${booking.dates}</td>
+<td class="px-6 py-4 text-gray-900">${booking.route}</td>
+<td class="px-6 py-4 text-gray-900">${booking.pnr}</td>
+<td class="px-6 py-4 text-gray-900">${booking.confirmation}</td>
+<td class="px-6 py-4">
+<div class="flex items-center gap-4">
+<button class="text-primary hover:text-primary/80" onclick="showTripDetails('${booking.pnr}')">View Details</button>
+${booking.hasChat ? '<div class="relative"><div class="w-5 h-5 flex items-center justify-center text-primary"><i class="ri-message-3-line"></i></div><div class="absolute -top-1 -right-1 w-2 h-2 bg-red-500 rounded-full"></div></div>' : ''}
+</div>
+</td>
+</tr>
+`).join('');
+// Update counts
+updateBookingCounts();
+}
+function updateBookingCounts() {
+const allCount = bookings.length;
+const issuedCount = bookings.filter(booking => booking.status === 'Issued').length;
+const pendingCount = bookings.filter(booking => booking.status === 'Pending').length;
+document.getElementById('allBookingsCount').textContent = allCount;
+document.getElementById('issuedTicketsCount').textContent = issuedCount;
+document.getElementById('pendingTicketsCount').textContent = pendingCount;
+}
+function showTripDetails(pnr) {
+const booking = bookings.find(b => b.pnr === pnr);
+if (!booking) return;
+const [origin, destination] = booking.route.split(' - ');
+// Mock traveler details
+const travelerDetails = {
+name: booking.traveler,
+dob: '19XX-XX-XX',
+gender: 'X',
+phone: '+1 XXX-XXX-XXXX',
+email: 'xxx@xxx.com',
+passport: 'XXXXXXXX',
+ktn: 'TXXXXXXX',
+redress: 'XXXXXXXX',
+membership: 'XXXXXXXXXX'
+};
+// Mock flight details
+const flightDetails = {
+airline: booking.confirmation !== '-' ? booking.confirmation.substring(0, 2) : 'XX',
+flightNumber: booking.confirmation !== '-' ? booking.confirmation.substring(2) : 'XXXX',
+aircraft: 'Boeing 787-9',
+departureTime: '10:30 AM',
+arrivalTime: '2:45 PM',
+duration: '8h 15m',
+class: 'Economy'
+};
+// Meeting details
+const meetingDetails = booking.meeting || {
+eventName: 'No meeting information available',
+eventLocation: 'N/A',
+eventDates: 'N/A',
+eventTime: 'N/A',
+hostName: 'N/A',
+hostEmail: 'N/A',
+locationImage: 'https://public.readdy.ai/ai/img_res/3f163581b049b76f116dbe33082de41e.jpg'
+};
+// Hide main content and show trip details page
+document.querySelector('main').style.display = 'none';
+const detailsPage = document.createElement('div');
+detailsPage.id = 'tripDetailsPage';
+detailsPage.className = 'flex-1 bg-gray-50';
+detailsPage.innerHTML = `
+<header class="bg-white border-b border-gray-200 px-8 py-4">
+<div class="flex items-center justify-between">
+<div class="flex items-center gap-4">
+<button id="backToBookings" class="text-gray-600 hover:text-primary">
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-arrow-left-line"></i>
+</div>
+</button>
+<h2 class="text-xl font-semibold">Trip Details - ${booking.pnr}</h2>
+</div>
+<button class="bg-white border border-primary text-primary px-4 py-2 rounded-button flex items-center justify-center gap-2 whitespace-nowrap" onclick="openChat('${booking.pnr}', false)">
+<i class="ri-message-3-line"></i>
+<span>Chat with Traveler</span>
+</button>
+</div>
+</header>
+<div class="p-8">
+<div class="bg-white rounded-lg shadow p-6 space-y-8">
+<div>
+<h4 class="font-medium mb-4 text-lg text-primary border-b-2 border-primary inline-block pb-1">Flight Details</h4>
+<div class="space-y-6">
+<div class="flex items-center justify-between border-b border-gray-100 pb-4">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center">
+<i class="ri-flight-takeoff-fill text-xl text-primary"></i>
+</div>
+<div>
+<p class="text-sm text-gray-500">Airline</p>
+<p class="text-gray-900 font-medium">${booking.airline.name} (${booking.airline.code}) - ${booking.airline.flightNumber}</p>
+</div>
+</div>
+<div>
+<p class="text-sm text-gray-500">Aircraft</p>
+<p class="text-gray-900">${flightDetails.aircraft}</p>
+</div>
+</div>
+<div class="flex items-start justify-between">
+<div class="space-y-1">
+<p class="text-sm text-gray-500">Origin</p>
+<p class="text-gray-900 font-medium">${origin}</p>
+<p class="text-gray-700">${airports[origin]}</p>
+<p class="text-gray-900">${flightDetails.departureTime}</p>
+</div>
+<div class="flex-1 flex flex-col items-center px-4">
+<div class="w-full flex items-center justify-center gap-2 py-4">
+<div class="w-3 h-3 rounded-full bg-primary"></div>
+<div class="flex-1 border-t-2 border-dashed border-gray-300"></div>
+<div class="w-3 h-3 rounded-full bg-primary"></div>
+</div>
+<p class="text-sm text-gray-500">${flightDetails.duration}</p>
+</div>
+<div class="space-y-1 text-right">
+<p class="text-sm text-gray-500">Destination</p>
+<p class="text-gray-900 font-medium">${destination}</p>
+<p class="text-gray-700">${airports[destination]}</p>
+<p class="text-gray-900">${flightDetails.arrivalTime}</p>
+</div>
+</div>
+<div class="flex items-center justify-between border-t border-gray-100 pt-4">
+<div>
+<p class="text-sm text-gray-500">Class</p>
+<p class="text-gray-900">${flightDetails.class}</p>
+</div>
+<div>
+<p class="text-sm text-gray-500">Travel Dates</p>
+<p class="text-gray-900">${booking.dates}</p>
+</div>
+</div>
+</div>
+</div>
+<div>
+<h4 class="font-medium mb-4 text-lg text-primary border-b-2 border-primary inline-block pb-1">Booking Information</h4>
+<div class="grid grid-cols-2 gap-6">
+<div>
+<p class="text-sm text-gray-500">PNR</p>
+<p class="text-gray-900">${booking.pnr}</p>
+</div>
+<div>
+<p class="text-sm text-gray-500">Airline Confirmation</p>
+<p class="text-gray-900">${booking.confirmation === '-' ? 'Not Available' : booking.confirmation}</p>
+</div>
+</div>
+</div>
+<div class="mt-8">
+<h4 class="font-medium mb-4 text-lg text-primary border-b-2 border-primary inline-block pb-1">Meeting Information</h4>
+<div class="grid grid-cols-2 gap-6">
+<div>
+<p class="text-sm text-gray-500">Event Name</p>
+<p class="text-gray-900">${meetingDetails.eventName}</p>
+</div>
+<div>
+<p class="text-sm text-gray-500">Event Location</p>
+<p class="text-gray-900">${meetingDetails.eventLocation}</p>
+</div>
+<div>
+<p class="text-sm text-gray-500">Event Dates & Time</p>
+<p class="text-gray-900">${meetingDetails.eventDates} • ${meetingDetails.eventTime}</p>
+</div>
+<div>
+<p class="text-sm text-gray-500">Host Name</p>
+<p class="text-gray-900">${meetingDetails.hostName}</p>
+</div>
+<div class="col-span-2">
+<p class="text-sm text-gray-500">Host Email</p>
+<p class="text-gray-900">${meetingDetails.hostEmail}</p>
+</div>
+</div>
+</div>
+<div>
+<h4 class="font-medium mb-4 text-lg text-primary border-b-2 border-primary inline-block pb-1">Traveler Information</h4>
+<div class="grid grid-cols-2 gap-6">
+<div>
+<p class="text-sm text-gray-500">Name</p>
+<p class="text-gray-900">${travelerDetails.name}</p>
+</div>
+<div>
+<p class="text-sm text-gray-500">Date of Birth</p>
+<p class="text-gray-900">${travelerDetails.dob}</p>
+</div>
+<div>
+<p class="text-sm text-gray-500">Gender</p>
+<p class="text-gray-900">${travelerDetails.gender}</p>
+</div>
+<div>
+<p class="text-sm text-gray-500">Phone Number</p>
+<p class="text-gray-900">${travelerDetails.phone}</p>
+</div>
+<div>
+<p class="text-sm text-gray-500">Email</p>
+<p class="text-gray-900">${travelerDetails.email}</p>
+</div>
+<div>
+<p class="text-sm text-gray-500">Passport Number</p>
+<p class="text-gray-900">${travelerDetails.passport}</p>
+</div>
+<div>
+<p class="text-sm text-gray-500">KTN Number</p>
+<p class="text-gray-900">${travelerDetails.ktn}</p>
+</div>
+<div>
+<p class="text-sm text-gray-500">Redress Number</p>
+<p class="text-gray-900">${travelerDetails.redress}</p>
+</div>
+<div class="col-span-2">
+<p class="text-sm text-gray-500">Airlines Membership Number</p>
+<p class="text-gray-900">${travelerDetails.membership}</p>
+</div>
+</div>
+</div>
+<!-- Button removed from here as it's now in the header -->
+</div>
+</div>
+`;
+document.querySelector('.flex.min-h-screen').appendChild(detailsPage);
+// Add event listener to back button
+document.getElementById('backToBookings').addEventListener('click', function() {
+document.getElementById('tripDetailsPage').remove();
+document.querySelector('main').style.display = 'block';
+});
+}
+function openChat(pnr, keepModalOpen = false) {
+document.getElementById('chatPnr').textContent = pnr;
+document.querySelector('.chat-popover').classList.add('show');
+renderChatMessages(pnr);
+}
+// Event listener for modal close button removed as modal is replaced by sub page
+document.querySelector('.close-chat').addEventListener('click', () => {
+document.querySelector('.chat-popover').classList.remove('show');
+});
+// Chat messages data
+const chatMessages = {
+'JKL012': [
+{ id: 1, sender: 'traveler', text: 'Hi, I have a question about my flight to Sydney.', timestamp: '2025-03-27T14:30:00', status: 'read', reactions: [] },
+{ id: 2, sender: 'agent', text: 'Hello! I\'d be happy to help. What would you like to know?', timestamp: '2025-03-27T14:32:00', status: 'read', reactions: [] },
+{ id: 3, sender: 'traveler', text: 'Can I request a vegetarian meal for the flight?', timestamp: '2025-03-27T14:35:00', status: 'read', reactions: ['👍'] },
+{ id: 4, sender: 'agent', text: 'Yes, absolutely! I can add that request to your booking right now.', timestamp: '2025-03-27T14:37:00', status: 'read', reactions: [] },
+{ id: 5, sender: 'traveler', text: 'Great, thank you!', timestamp: '2025-03-27T14:40:00', status: 'read', reactions: ['❤️'] },
+{ id: 6, sender: 'agent', text: 'You\'re welcome! Is there anything else you need help with?', timestamp: '2025-03-27T14:42:00', status: 'delivered', reactions: [] }
+],
+'PQR678': [
+{ id: 1, sender: 'traveler', text: 'Hello, I need to change my return date.', timestamp: '2025-03-26T10:15:00', status: 'read', reactions: [] },
+{ id: 2, sender: 'agent', text: 'Good morning! I can help with that. What date would you like to change it to?', timestamp: '2025-03-26T10:18:00', status: 'read', reactions: [] },
+{ id: 3, sender: 'traveler', text: 'I\'d like to return on July 10 instead of July 8.', timestamp: '2025-03-26T10:20:00', status: 'read', reactions: [] },
+{ id: 4, sender: 'agent', text: 'Let me check availability for that date.', timestamp: '2025-03-26T10:22:00', status: 'read', reactions: [] },
+{ id: 5, sender: 'agent', text: 'I\'ve found a flight on July 10. There will be a change fee of $150. Would you like to proceed?', timestamp: '2025-03-26T10:25:00', status: 'read', reactions: [] },
+{ id: 6, sender: 'traveler', text: 'Yes, please go ahead with the change.', timestamp: '2025-03-26T10:30:00', status: 'read', reactions: ['👍'] },
+{ id: 7, sender: 'agent', text: 'Great! I\'ve processed the change. You\'ll receive an updated itinerary by email shortly.', timestamp: '2025-03-26T10:35:00', status: 'delivered', reactions: [] }
+],
+'GHI789': [
+{ id: 1, sender: 'traveler', text: 'Hi there, do I need a visa for Japan?', timestamp: '2025-03-25T16:05:00', status: 'read', reactions: [] },
+{ id: 2, sender: 'agent', text: 'Hello! It depends on your nationality. May I know which passport you\'ll be traveling with?', timestamp: '2025-03-25T16:08:00', status: 'read', reactions: [] },
+{ id: 3, sender: 'traveler', text: 'I have a US passport.', timestamp: '2025-03-25T16:10:00', status: 'read', reactions: [] },
+{ id: 4, sender: 'agent', text: 'For US passport holders, you can enter Japan for up to 90 days without a visa for tourism purposes.', timestamp: '2025-03-25T16:12:00', status: 'read', reactions: ['🙏'] },
+{ id: 5, sender: 'traveler', text: 'That\'s great news! Thank you for the information.', timestamp: '2025-03-25T16:15:00', status: 'read', reactions: [] },
+{ id: 6, sender: 'agent', text: 'You\'re welcome! Let me know if you have any other questions.', timestamp: '2025-03-25T16:17:00', status: 'read', reactions: [] },
+{ id: 7, sender: 'traveler', text: 'Actually, I do have one more question. Do I need to fill out any forms before arrival?', timestamp: '2025-03-25T16:20:00', status: 'read', reactions: [] },
+{ id: 8, sender: 'agent', text: 'Yes, you\'ll need to complete an online "Visit Japan Web" registration before your trip. I\'ll send you the link.', timestamp: '2025-03-25T16:23:00', status: 'read', reactions: [] },
+{ id: 9, sender: 'agent', text: 'Here\'s the link: https://vjw.digital.go.jp/', timestamp: '2025-03-25T16:24:00', status: 'delivered', reactions: ['👍'] }
+],
+'YZA567': [
+{ id: 1, sender: 'traveler', text: 'Hello, I\'d like to add baggage to my booking.', timestamp: '2025-03-28T09:10:00', status: 'read', reactions: [] },
+{ id: 2, sender: 'agent', text: 'Good morning! I\'d be happy to help you add baggage. How many bags would you like to add?', timestamp: '2025-03-28T09:12:00', status: 'read', reactions: [] },
+{ id: 3, sender: 'traveler', text: 'I need to add one checked bag.', timestamp: '2025-03-28T09:15:00', status: 'read', reactions: [] },
+{ id: 4, sender: 'agent', text: 'I can add that for you. The fee for one checked bag is $35.', timestamp: '2025-03-28T09:17:00', status: 'sent', reactions: [] }
+]
+};
+// Function to format timestamp
+function formatTimestamp(timestamp) {
+const date = new Date(timestamp);
+const now = new Date();
+const isToday = date.toDateString() === now.toDateString();
+const hours = date.getHours().toString().padStart(2, '0');
+const minutes = date.getMinutes().toString().padStart(2, '0');
+if (isToday) {
+return `Today at ${hours}:${minutes}`;
+} else {
+const month = date.toLocaleString('default', { month: 'short' });
+const day = date.getDate();
+return `${month} ${day} at ${hours}:${minutes}`;
+}
+}
+// Function to render chat messages
+function renderChatMessages(pnr) {
+const messagesContainer = document.getElementById('chatMessages');
+messagesContainer.innerHTML = '';
+const messages = chatMessages[pnr] || [];
+const booking = bookings.find(b => b.pnr === pnr);
+if (messages.length === 0) {
+messagesContainer.innerHTML = `
+<div class="flex justify-center items-center h-full">
+<p class="text-gray-500">No messages yet. Start a conversation!</p>
+</div>
+`;
+return;
+}
+let html = '';
+messages.forEach(message => {
+const isAgent = message.sender === 'agent';
+const statusIcon = message.status === 'sent' ? 'ri-check-line' :
+message.status === 'delivered' ? 'ri-check-double-line' :
+message.status === 'read' ? 'ri-check-double-line text-primary' : '';
+html += `
+<div class="mb-4 ${isAgent ? 'flex justify-end' : ''}">
+<div class="${isAgent ? 'bg-primary text-white' : 'bg-gray-100 text-gray-800'} rounded-lg px-4 py-2 max-w-[80%]">
+<div class="text-sm ${isAgent ? 'text-white/80' : 'text-gray-500'} mb-1">
+${isAgent ? 'You' : booking.traveler}
+</div>
+<p>${message.text}</p>
+${message.file ? `
+<div class="mt-2 p-2 bg-white/10 rounded flex items-center gap-2">
+<i class="ri-file-line"></i>
+<span class="text-sm">${message.file}</span>
+</div>
+` : ''}
+<div class="flex justify-between items-center mt-1">
+<span class="text-xs ${isAgent ? 'text-white/70' : 'text-gray-500'}">${formatTimestamp(message.timestamp)}</span>
+${isAgent ? `<i class="${statusIcon} text-xs"></i>` : ''}
+</div>
+${message.reactions.length > 0 ? `
+<div class="flex gap-1 mt-1">
+${message.reactions.map(reaction => `<span class="text-xs">${reaction}</span>`).join('')}
+</div>
+` : ''}
+</div>
+</div>
+`;
+});
+messagesContainer.innerHTML = html;
+messagesContainer.scrollTop = messagesContainer.scrollHeight;
+}
+// Event listeners for chat functionality
+document.addEventListener('DOMContentLoaded', function() {
+// Add event listeners for tab buttons
+const allBookingsBtn = document.getElementById('allBookingsBtn');
+const issuedTicketsBtn = document.getElementById('issuedTicketsBtn');
+const pendingTicketsBtn = document.getElementById('pendingTicketsBtn');
+allBookingsBtn.addEventListener('click', function() {
+setActiveTab('all');
+renderBookings('all');
+});
+issuedTicketsBtn.addEventListener('click', function() {
+setActiveTab('issued');
+renderBookings('issued');
+});
+pendingTicketsBtn.addEventListener('click', function() {
+setActiveTab('pending');
+renderBookings('pending');
+});
+function setActiveTab(tab) {
+// Remove active class from all tabs
+allBookingsBtn.className = 'text-gray-600 px-1 py-2';
+issuedTicketsBtn.className = 'text-gray-600 px-1 py-2';
+pendingTicketsBtn.className = 'text-gray-600 px-1 py-2';
+// Add active class to selected tab
+if (tab === 'all') {
+allBookingsBtn.className = 'text-primary border-b-2 border-primary px-1 py-2';
+} else if (tab === 'issued') {
+issuedTicketsBtn.className = 'text-primary border-b-2 border-primary px-1 py-2';
+} else if (tab === 'pending') {
+pendingTicketsBtn.className = 'text-primary border-b-2 border-primary px-1 py-2';
+}
+}
+const sendButton = document.getElementById('sendMessage');
+const messageInput = document.getElementById('messageInput');
+const fileInput = document.getElementById('fileInput');
+const attachButton = document.getElementById('attachFile');
+const emojiButton = document.getElementById('addEmoji');
+sendButton.addEventListener('click', function() {
+sendNewMessage();
+});
+messageInput.addEventListener('keypress', function(e) {
+if (e.key === 'Enter') {
+sendNewMessage();
+}
+});
+attachButton.addEventListener('click', function() {
+fileInput.click();
+});
+fileInput.addEventListener('change', function() {
+if (fileInput.files.length > 0) {
+const fileName = fileInput.files[0].name;
+messageInput.value += ` [File: ${fileName}]`;
+}
+});
+emojiButton.addEventListener('click', function() {
+// Simple emoji picker
+const emojis = ['😊', '👍', '❤️', '🙏', '👋', '🎉', '✅', '⭐'];
+const emojiPicker = document.createElement('div');
+emojiPicker.className = 'absolute bottom-16 right-0 bg-white shadow-lg rounded p-2 flex gap-2';
+emojiPicker.style.zIndex = '100';
+emojis.forEach(emoji => {
+const emojiButton = document.createElement('button');
+emojiButton.textContent = emoji;
+emojiButton.className = 'text-xl hover:bg-gray-100 p-1 rounded';
+emojiButton.addEventListener('click', function() {
+messageInput.value += emoji;
+emojiPicker.remove();
+});
+emojiPicker.appendChild(emojiButton);
+});
+// Remove existing picker if any
+const existingPicker = document.querySelector('.emoji-picker');
+if (existingPicker) {
+existingPicker.remove();
+}
+emojiPicker.classList.add('emoji-picker');
+document.querySelector('.chat-popover').appendChild(emojiPicker);
+// Close picker when clicking outside
+document.addEventListener('click', function closeEmojiPicker(e) {
+if (!emojiPicker.contains(e.target) && e.target !== emojiButton) {
+emojiPicker.remove();
+document.removeEventListener('click', closeEmojiPicker);
+}
+});
+});
+function sendNewMessage() {
+const pnr = document.getElementById('chatPnr').textContent;
+const text = messageInput.value.trim();
+if (text) {
+if (!chatMessages[pnr]) {
+chatMessages[pnr] = [];
+}
+const newId = chatMessages[pnr].length > 0 ? Math.max(...chatMessages[pnr].map(m => m.id)) + 1 : 1;
+const now = new Date().toISOString();
+let fileInfo = null;
+if (text.includes('[File:')) {
+const fileMatch = text.match(/\[File: (.*?)\]/);
+if (fileMatch) {
+fileInfo = fileMatch[1];
+}
+}
+const cleanText = text.replace(/\[File: .*?\]/, '').trim();
+const newMessage = {
+id: newId,
+sender: 'agent',
+text: cleanText,
+timestamp: now,
+status: 'sent',
+reactions: [],
+file: fileInfo
+};
+chatMessages[pnr].push(newMessage);
+renderChatMessages(pnr);
+messageInput.value = '';
+fileInput.value = '';
+// Simulate message status change
+setTimeout(() => {
+newMessage.status = 'delivered';
+renderChatMessages(pnr);
+}, 1000);
+// Add chat notification for this booking
+const booking = bookings.find(b => b.pnr === pnr);
+if (booking) {
+booking.hasChat = true;
+// Initialize with all bookings and update counts
+renderBookings('all');
+updateBookingCounts();
+}
+}
+}
+});
+// Initialize with all bookings and update counts
+renderBookings('all');
+updateBookingCounts();
+</script>
+</body>
+</html>

@@ -1,0 +1,452 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Messages - Trip Bookings</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&display=swap" rel="stylesheet">
+<link href="https://cdnjs.cloudflare.com/ajax/libs/remixicon/4.6.0/remixicon.min.css" rel="stylesheet">
+<script src="https://cdn.tailwindcss.com/3.4.16"></script>
+<script>
+tailwind.config = {
+theme: {
+extend: {
+colors: {
+primary: '#3B82F6',
+secondary: '#64748B'
+},
+borderRadius: {
+'none': '0px',
+'sm': '4px',
+DEFAULT: '8px',
+'md': '12px', 
+'lg': '16px',
+'xl': '20px',
+'2xl': '24px',
+'3xl': '32px',
+'full': '9999px',
+'button': '8px'
+}
+}
+}
+}
+</script>
+<style>
+:where([class^="ri-"])::before { content: "\f3c2"; }
+.message-list::-webkit-scrollbar {
+width: 6px;
+}
+.message-list::-webkit-scrollbar-track {
+background: #f1f5f9;
+}
+.message-list::-webkit-scrollbar-thumb {
+background: #cbd5e1;
+border-radius: 20px;
+}
+.chat-messages::-webkit-scrollbar {
+width: 6px;
+}
+.chat-messages::-webkit-scrollbar-track {
+background: #f1f5f9;
+}
+.chat-messages::-webkit-scrollbar-thumb {
+background: #cbd5e1;
+border-radius: 20px;
+}
+</style>
+</head>
+<body class="bg-gray-50">
+<div class="flex min-h-screen">
+<aside class="w-64 bg-white border-r border-gray-200">
+<div class="p-4">
+<img src="https://static.readdy.ai/image/a007d4763439bf6e95fde8fcb906c41c/0e4fcee915210f0957697e156affd25e.png" alt="emPath logo" class="h-10">
+</div>
+<nav class="mt-4">
+<a href="https://readdy.ai/home/cebd9b50-d804-443f-8e18-41920a3974d1/5f411f6e-a800-4aa7-88ca-f8ef9bf548a7" data-readdy="true" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-plane-line"></i>
+</div>
+<span class="ml-3">Trip Bookings</span>
+</a>
+<a href="#" class="flex items-center px-4 py-3 text-gray-600 hover:bg-gray-50">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-calendar-line"></i>
+</div>
+<span class="ml-3">Meetings</span>
+</a>
+<a href="#" class="flex items-center px-4 py-3 bg-gray-50 text-primary">
+<div class="w-5 h-5 flex items-center justify-center">
+<i class="ri-message-3-line"></i>
+</div>
+<span class="ml-3">Messages</span>
+</a>
+</nav>
+</aside>
+
+<div class="flex-1 flex">
+<div class="w-[400px] bg-white border-r border-gray-200 flex flex-col">
+<div class="p-4 border-b border-gray-200">
+<div class="relative">
+<input type="text" id="searchInput" placeholder="Search messages..." class="w-full pl-10 pr-4 py-2 border border-gray-200 rounded-button text-sm focus:outline-none focus:border-primary">
+<div class="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 flex items-center justify-center text-gray-400">
+<i class="ri-search-line"></i>
+</div>
+</div>
+<button id="newMessageBtn" class="mt-3 w-full bg-primary text-white px-4 py-2 rounded-button flex items-center justify-center gap-2 cursor-pointer whitespace-nowrap">
+<i class="ri-add-line"></i>
+<span>New Message</span>
+</button>
+</div>
+
+<div class="flex-1 overflow-y-auto message-list" id="messageList">
+</div>
+</div>
+
+<div class="flex-1 flex flex-col bg-white" id="chatContainer">
+<div class="p-4 border-b border-gray-200 flex items-center justify-between">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-primary">
+<i class="ri-user-line"></i>
+</div>
+<div>
+<h3 class="font-medium" id="chatName"></h3>
+<p class="text-sm text-gray-500">PNR: <span id="chatPNR"></span></p>
+</div>
+</div>
+</div>
+
+<div class="flex-1 overflow-y-auto p-4 chat-messages" id="chatMessages">
+<div class="flex items-center justify-center h-full text-gray-500">
+Select a conversation to start messaging
+</div>
+</div>
+
+<div class="p-4 border-t border-gray-200">
+<div class="flex flex-col gap-2">
+<div class="flex gap-2">
+<input type="text" id="messageInput" placeholder="Type a message..." class="flex-1 px-4 py-2 border border-gray-200 rounded-button text-sm focus:outline-none focus:border-primary" disabled>
+<button id="sendMessage" class="bg-primary text-white px-4 py-2 rounded-button flex items-center gap-2 whitespace-nowrap cursor-pointer" disabled>
+<i class="ri-send-plane-line"></i>
+</button>
+</div>
+<div class="flex items-center gap-2">
+<button class="text-gray-500 hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed" id="attachFile" disabled>
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-attachment-2-line"></i>
+</div>
+</button>
+<button class="text-gray-500 hover:text-primary disabled:opacity-50 disabled:cursor-not-allowed" id="addEmoji" disabled>
+<div class="w-6 h-6 flex items-center justify-center">
+<i class="ri-emotion-line"></i>
+</div>
+</button>
+<input type="file" id="fileInput" class="hidden">
+</div>
+</div>
+</div>
+</div>
+</div>
+</div>
+
+<div id="newMessageModal" class="hidden fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+<div class="bg-white rounded-lg w-[500px] max-h-[80vh] flex flex-col">
+<div class="p-4 border-b border-gray-200 flex items-center justify-between">
+<h3 class="font-medium">New Message</h3>
+<button id="closeModal" class="text-gray-400 hover:text-gray-600">
+<i class="ri-close-line text-xl"></i>
+</button>
+</div>
+<div class="p-4 flex-1 overflow-y-auto">
+<input type="text" id="searchTraveler" placeholder="Search traveler by name or PNR..." class="w-full px-4 py-2 border border-gray-200 rounded-button text-sm focus:outline-none focus:border-primary mb-4">
+<div id="travelerList" class="space-y-2"></div>
+</div>
+</div>
+</div>
+
+<script>
+const mockData = {
+conversations: [
+{
+id: 1,
+traveler: "Emily Johnson",
+pnr: "ABC123",
+lastMessage: "Thank you for your help with the flight change!",
+timestamp: "2025-03-28T09:30:00",
+unread: 2,
+messages: [
+{
+id: 1,
+sender: "traveler",
+text: "Hi, I need to change my flight date.",
+timestamp: "2025-03-28T09:15:00",
+status: "read"
+},
+{
+id: 2,
+sender: "agent",
+text: "I can help you with that. What date would you like to change to?",
+timestamp: "2025-03-28T09:20:00",
+status: "read"
+},
+{
+id: 3,
+sender: "traveler",
+text: "I'd like to move it to April 5th if possible.",
+timestamp: "2025-03-28T09:25:00",
+status: "read"
+},
+{
+id: 4,
+sender: "traveler",
+text: "Thank you for your help with the flight change!",
+timestamp: "2025-03-28T09:30:00",
+status: "unread"
+}
+]
+},
+{
+id: 2,
+traveler: "Michael Chen",
+pnr: "DEF456",
+lastMessage: "Is there a vegetarian meal option available?",
+timestamp: "2025-03-28T08:45:00",
+unread: 1,
+messages: [
+{
+id: 1,
+sender: "traveler",
+text: "Is there a vegetarian meal option available?",
+timestamp: "2025-03-28T08:45:00",
+status: "unread"
+}
+]
+},
+{
+id: 3,
+traveler: "Sarah Wilson",
+pnr: "GHI789",
+lastMessage: "Your baggage has been added to the booking.",
+timestamp: "2025-03-27T16:20:00",
+unread: 0,
+messages: [
+{
+id: 1,
+sender: "traveler",
+text: "Can I add an extra bag to my booking?",
+timestamp: "2025-03-27T16:10:00",
+status: "read"
+},
+{
+id: 2,
+sender: "agent",
+text: "Your baggage has been added to the booking.",
+timestamp: "2025-03-27T16:20:00",
+status: "read"
+}
+]
+}
+]
+};
+
+function formatTimestamp(timestamp) {
+const date = new Date(timestamp);
+const now = new Date();
+const isToday = date.toDateString() === now.toDateString();
+const hours = date.getHours().toString().padStart(2, '0');
+const minutes = date.getMinutes().toString().padStart(2, '0');
+
+if (isToday) {
+return `${hours}:${minutes}`;
+} else {
+const month = date.toLocaleString('default', { month: 'short' });
+const day = date.getDate();
+return `${month} ${day}`;
+}
+}
+
+function renderConversations(searchTerm = '') {
+const filteredConversations = mockData.conversations.filter(conv => 
+conv.traveler.toLowerCase().includes(searchTerm.toLowerCase()) ||
+conv.pnr.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
+const messageList = document.getElementById('messageList');
+messageList.innerHTML = filteredConversations.map(conv => `
+<div class="conversation-item cursor-pointer p-4 hover:bg-gray-50 border-b border-gray-200" data-id="${conv.id}">
+<div class="flex items-center justify-between mb-2">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-primary">
+<i class="ri-user-line"></i>
+</div>
+<div>
+<h4 class="font-medium">${conv.traveler}</h4>
+<p class="text-sm text-gray-500">PNR: ${conv.pnr}</p>
+</div>
+</div>
+<div class="text-xs text-gray-500">${formatTimestamp(conv.timestamp)}</div>
+</div>
+<div class="flex items-start justify-between">
+<p class="text-sm text-gray-600 line-clamp-2">${conv.lastMessage}</p>
+${conv.unread > 0 ? `<div class="min-w-[20px] h-5 bg-primary text-white text-xs rounded-full flex items-center justify-center px-1">${conv.unread}</div>` : ''}
+</div>
+</div>
+`).join('');
+
+document.querySelectorAll('.conversation-item').forEach(item => {
+item.addEventListener('click', () => {
+const convId = parseInt(item.dataset.id);
+const conversation = mockData.conversations.find(c => c.id === convId);
+showChat(conversation);
+});
+});
+}
+
+function showChat(conversation) {
+document.getElementById('chatName').textContent = conversation.traveler;
+document.getElementById('chatPNR').textContent = conversation.pnr;
+
+const chatMessages = document.getElementById('chatMessages');
+chatMessages.innerHTML = conversation.messages.map(msg => `
+<div class="mb-4 ${msg.sender === 'agent' ? 'flex justify-end' : ''}">
+<div class="${msg.sender === 'agent' ? 'bg-primary text-white' : 'bg-gray-100'} rounded-lg px-4 py-2 max-w-[80%]">
+<div class="text-sm ${msg.sender === 'agent' ? 'text-white/80' : 'text-gray-500'} mb-1">
+${msg.sender === 'agent' ? 'You' : conversation.traveler}
+</div>
+<p>${msg.text}</p>
+<div class="flex justify-between items-center mt-1">
+<span class="text-xs ${msg.sender === 'agent' ? 'text-white/70' : 'text-gray-500'}">${formatTimestamp(msg.timestamp)}</span>
+${msg.sender === 'agent' ? `
+<i class="ri-check-${msg.status === 'read' ? 'double' : ''}-line text-xs ${msg.status === 'read' ? 'text-white' : 'text-white/70'}"></i>
+` : ''}
+</div>
+</div>
+</div>
+`).join('');
+
+chatMessages.scrollTop = chatMessages.scrollHeight;
+
+document.getElementById('messageInput').disabled = false;
+document.getElementById('sendMessage').disabled = false;
+document.getElementById('attachFile').disabled = false;
+document.getElementById('addEmoji').disabled = false;
+
+conversation.unread = 0;
+renderConversations();
+}
+
+document.getElementById('searchInput').addEventListener('input', (e) => {
+renderConversations(e.target.value);
+});
+
+document.getElementById('newMessageBtn').addEventListener('click', () => {
+document.getElementById('newMessageModal').classList.remove('hidden');
+renderTravelerList();
+});
+
+document.getElementById('closeModal').addEventListener('click', () => {
+document.getElementById('newMessageModal').classList.add('hidden');
+});
+
+document.getElementById('searchTraveler').addEventListener('input', (e) => {
+renderTravelerList(e.target.value);
+});
+
+function renderTravelerList(searchTerm = '') {
+const travelers = [
+{name: "Emily Johnson", pnr: "ABC123"},
+{name: "Michael Chen", pnr: "DEF456"},
+{name: "Sarah Wilson", pnr: "GHI789"},
+{name: "David Brown", pnr: "JKL012"},
+{name: "Lisa Anderson", pnr: "MNO345"}
+];
+
+const filteredTravelers = travelers.filter(t => 
+t.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+t.pnr.toLowerCase().includes(searchTerm.toLowerCase())
+);
+
+document.getElementById('travelerList').innerHTML = filteredTravelers.map(t => `
+<div class="flex items-center justify-between p-3 hover:bg-gray-50 rounded-lg cursor-pointer traveler-item" data-pnr="${t.pnr}">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 bg-gray-100 rounded-full flex items-center justify-center text-primary">
+<i class="ri-user-line"></i>
+</div>
+<div>
+<h4 class="font-medium">${t.name}</h4>
+<p class="text-sm text-gray-500">PNR: ${t.pnr}</p>
+</div>
+</div>
+</div>
+`).join('');
+
+document.querySelectorAll('.traveler-item').forEach(item => {
+item.addEventListener('click', () => {
+const pnr = item.dataset.pnr;
+startNewConversation(travelers.find(t => t.pnr === pnr));
+document.getElementById('newMessageModal').classList.add('hidden');
+});
+});
+}
+
+function startNewConversation(traveler) {
+const newConversation = {
+id: mockData.conversations.length + 1,
+traveler: traveler.name,
+pnr: traveler.pnr,
+lastMessage: "",
+timestamp: new Date().toISOString(),
+unread: 0,
+messages: []
+};
+
+mockData.conversations.unshift(newConversation);
+renderConversations();
+showChat(newConversation);
+}
+
+document.getElementById('messageInput').addEventListener('keypress', (e) => {
+if (e.key === 'Enter' && !e.shiftKey) {
+e.preventDefault();
+sendMessage();
+}
+});
+
+document.getElementById('sendMessage').addEventListener('click', sendMessage);
+
+function sendMessage() {
+const input = document.getElementById('messageInput');
+const text = input.value.trim();
+if (!text) return;
+
+const activePNR = document.getElementById('chatPNR').textContent;
+const conversation = mockData.conversations.find(c => c.pnr === activePNR);
+if (!conversation) return;
+
+const newMessage = {
+id: conversation.messages.length + 1,
+sender: 'agent',
+text: text,
+timestamp: new Date().toISOString(),
+status: 'sent'
+};
+
+conversation.messages.push(newMessage);
+conversation.lastMessage = text;
+conversation.timestamp = newMessage.timestamp;
+
+input.value = '';
+showChat(conversation);
+renderConversations();
+
+setTimeout(() => {
+newMessage.status = 'read';
+showChat(conversation);
+}, 2000);
+}
+
+renderConversations();
+</script>
+</body>
+</html>
